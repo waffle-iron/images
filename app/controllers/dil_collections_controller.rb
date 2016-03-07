@@ -9,6 +9,30 @@ class DilCollectionsController < ApplicationController
 
   after_action :delete_powerpoint, only: [:update, :add, :remove, :move]
 
+  def create_public_collection
+    authorize!(:create, DILCollection)
+    new_collection = DILCollection.new(:pid => mint_pid("dil")
+    coll = InstitutionalCollection.new( pid: new_collection.pid )
+    #"Melville J. Herskovits Library of African Studies"
+    coll.title = "#{params[:title]}|#{params[:facets]}"
+    coll.rightsMetadata
+    coll.default_permissions
+    coll.default_permissions = [{:type=>"group", :access=>"read", :name=>"public"}]
+    coll.save
+
+    collection_identity_img = Multiresimage.find( "#{params[:collection_img_pid]}" )
+    collection_identity_img.add_relationship( :is_governed_by, coll )
+    collection_identity_img.save
+  end
+
+  def make_institutional_collection_public
+    authorize!(:update, DILCollection)
+    img = Multresimage.find(params[:pid])
+    img.remove_relationship( :is_governed_by, old_coll )
+    
+    img.add_relationship( :is_governed_by, new_coll )
+  end
+
   def create
     authorize!(:create, DILCollection)
 	  #make sure collection's name isn't a reserved name for Details collections
@@ -389,7 +413,7 @@ class DilCollectionsController < ApplicationController
     redirect_to dil_collection_path(c)
   end
 
-  # Catalog searching in dil_collections 
+  # Catalog searching in dil_collections
   def search_action_url
     url_for(controller: '/catalog', action: 'index', only_path: true)
   end
