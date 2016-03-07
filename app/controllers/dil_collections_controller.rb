@@ -20,7 +20,8 @@ class DilCollectionsController < ApplicationController
     coll = InstitutionalCollection.new( pid: new_collection.pid )
     #"Melville J. Herskovits Library of African Studies"
     #coll.title = "#{params[:title]}|#{params[:facets]}"
-    coll.title = "#{params[:title]} | Melville J. Herskovits Library of African Studies"
+    coll.title = "#{params[:unit_name]} | #{params[:collection_name]}"
+    
     coll.rightsMetadata
     coll.default_permissions
     coll.default_permissions = [{:type=>"group", :access=>"read", :name=>"public"}]
