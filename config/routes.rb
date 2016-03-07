@@ -6,7 +6,7 @@ Rails.application.routes.draw do
     mount AboutPage::Engine => '/about(.:format)'
   end
 
-if Rails.env.test? 
+if Rails.env.test?
   match 'ouch', :to => 'application#test500', via: [ :get, :post, :patch, :delete ]
   match "error", :to => "application#page_not_found", via: [ :get, :post, :patch, :delete ]
 end
@@ -21,6 +21,9 @@ end
   devise_for :users, :controllers => { :omniauth_callbacks => "users/omniauth_callbacks" }
 
   get "/multiresimages/get_vra/", to: "multiresimages#get_vra"
+
+  get "/dil_collections/new_public_collection", to: "dil_collections#new_public_collection"
+  post "/dil_collections/create_public_collection", to: "dil_collections#create_public_collection"
 
   devise_scope :user do
     root "catalog#index"

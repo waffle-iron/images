@@ -9,27 +9,41 @@ class DilCollectionsController < ApplicationController
 
   after_action :delete_powerpoint, only: [:update, :add, :remove, :move]
 
+  def new_public_collection
+
+  end
+
   def create_public_collection
-    authorize!(:create, DILCollection)
-    new_collection = DILCollection.new(:pid => mint_pid("dil")
+    #authorize!(:create, DILCollection)
+
+    new_collection = DILCollection.new(:pid => mint_pid("dil"))
     coll = InstitutionalCollection.new( pid: new_collection.pid )
     #"Melville J. Herskovits Library of African Studies"
-    coll.title = "#{params[:title]}|#{params[:facets]}"
+    #coll.title = "#{params[:title]}|#{params[:facets]}"
+    coll.title = "#{params[:title]} | Melville J. Herskovits Library of African Studies"
     coll.rightsMetadata
     coll.default_permissions
     coll.default_permissions = [{:type=>"group", :access=>"read", :name=>"public"}]
     coll.save
 
-    collection_identity_img = Multiresimage.find( "#{params[:collection_img_pid]}" )
+    collection_identity_img = Multiresimage.find( Multiresimage.last.pid )
+    #collection_identity_img = Multiresimage.find( "#{params[:collection_identity_img_pid]}" )
     collection_identity_img.add_relationship( :is_governed_by, coll )
     collection_identity_img.save
+
+    redirect_to :back, notice: "Public Collection #{coll.title} was successfully created."
   end
 
   def make_institutional_collection_public
-    authorize!(:update, DILCollection)
+    #authorize!(:update, DILCollection)
     img = Multresimage.find(params[:pid])
+    #need to get old collection obj
     img.remove_relationship( :is_governed_by, old_coll )
-    
+
+    #new_collection.pid -> either get or create
+
+    coll = InstitutionalCollection.new( pid: new_collection.pid )
+
     img.add_relationship( :is_governed_by, new_coll )
   end
 
