@@ -21,7 +21,7 @@ class DilCollectionsController < ApplicationController
     #"Melville J. Herskovits Library of African Studies"
     #coll.title = "#{params[:title]}|#{params[:facets]}"
     coll.title = "#{params[:unit_name]} | #{params[:collection_name]}"
-    
+
     coll.rightsMetadata
     coll.default_permissions
     coll.default_permissions = [{:type=>"group", :access=>"read", :name=>"public"}]
@@ -29,6 +29,8 @@ class DilCollectionsController < ApplicationController
 
     collection_identity_img = Multiresimage.find( Multiresimage.last.pid )
     #collection_identity_img = Multiresimage.find( "#{params[:collection_identity_img_pid]}" )
+
+    #how to add batch of images to a new collection?
     collection_identity_img.add_relationship( :is_governed_by, coll )
     collection_identity_img.save
 
@@ -42,7 +44,7 @@ class DilCollectionsController < ApplicationController
     img.remove_relationship( :is_governed_by, old_coll )
 
     #new_collection.pid -> either get or create
-
+    #make sure that all images that use this are correctly reflecting new state of collection
     coll = InstitutionalCollection.new( pid: new_collection.pid )
 
     img.add_relationship( :is_governed_by, new_coll )
@@ -56,14 +58,14 @@ class DilCollectionsController < ApplicationController
 	  else
 	    edit_users_array = DIL_CONFIG['admin_staff'] | Array.new([current_user.user_key])
 	    @dil_collection = DILCollection.new(:pid=>mint_pid("dil-local"))
-		@dil_collection.apply_depositor_metadata(current_user.user_key)
-		@dil_collection.edit_users = edit_users_array
-		# This allows ALL Collections created by users to be available for anyone with the link
-		@dil_collection.read_groups = ["registered"]
-		#@dil_collection.set_collection_type('dil_collection')
-		@dil_collection.descMetadata.title = params[:dil_collection][:title]
-    @dil_collection.owner = current_user.uid
-		@dil_collection.save!
+  		@dil_collection.apply_depositor_metadata(current_user.user_key)
+  	  @dil_collection.edit_users = edit_users_array
+  		# This allows ALL Collections created by users to be available for anyone with the link
+  		@dil_collection.read_groups = ["registered"]
+  		#@dil_collection.set_collection_type('dil_collection')
+  		@dil_collection.descMetadata.title = params[:dil_collection][:title]
+      @dil_collection.owner = current_user.uid
+  		@dil_collection.save!
 	  end
 	  redirect_to :back
   end
