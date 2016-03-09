@@ -97,9 +97,9 @@ class CatalogController < ApplicationController
 
   InstitutionalCollection.all.each do | coll |
     @collections_nav_and_display = {}
-    ic_display = InstitutionalCollection::InstitutionalCollectionDisplay.find_by_pid(coll.pid)
-    unless ic_display.nil?
-      @collections_nav_and_display['img_src'] = ic_display.identity_image_filename
+    collection_display = InstitutionalCollection::InstitutionalCollectionDisplay.find_by_pid(coll.pid)
+    unless collection_display.nil?
+      @collections_nav_and_display['img_src'] = collection_display.identity_image_filename
       @collections_nav_and_display['solr_url'] = "/catalog?f%5Binstitutional_collection_title_facet%5D%5B%5D=#{coll.title.split('|')[1].strip().gsub!(/ /, '+')}"
       @collections_nav_and_display['title'] = coll.title
       @institutional_collections << @collections_nav_and_display

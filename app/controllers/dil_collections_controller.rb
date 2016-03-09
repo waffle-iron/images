@@ -14,32 +14,32 @@ class DilCollectionsController < ApplicationController
   end
 
   def create_public_collection
-    #authorize!(:create, DILCollection)
-
+    #fedora objects, for collection data
     new_collection = DILCollection.new(:pid => mint_pid("dil"))
-    coll = InstitutionalCollection.new( pid: new_collection.pid )
-    #"Melville J. Herskovits Library of African Studies"
-    #coll.title = "#{params[:title]}|#{params[:facets]}"
-    coll.title = "#{params[:unit_name]} | #{params[:collection_name]}"
-    simple_col_obj = InstitutionalCollection::InstitutionalCollectionDisplay.new
-    simple_col_obj.identity_image_filename = "#{params[:identity_image_filename]}"
-    simple_col_obj.pid = new_collection.pid
+    public_collection = InstitutionalCollection.new( pid: new_collection.pid )
 
-    simple_col_obj.save
+    #plain old rails db object, for saving display data (image filename)
+    public_collection_display = InstitutionalCollection::InstitutionalCollectionDisplay.new
 
-    coll.rightsMetadata
-    coll.default_permissions
-    coll.default_permissions = [{:type=>"group", :access=>"read", :name=>"public"}]
-    coll.save
+    public_collection_display.identity_image_filename = "#{params[:identity_image_filename]}"
+    public_collection_display.pid = new_collection.pid
+    public_collection_display.save
 
+    public_collection.title = "#{params[:unit_name]} | #{params[:collection_name]}"
+    public_collection.rightsMetadata
+    public_collection.default_permissions
+    public_collection.default_permissions = [{:type=>"group", :access=>"read", :name=>"public"}]
+    public_collection.save
+
+    #sort this out: can people upload a new image, or do they choose an image from the collection, that then gets saved to the display object?
     collection_identity_img = Multiresimage.find( Multiresimage.last.pid )
     #collection_identity_img = Multiresimage.find( "#{params[:collection_identity_img_pid]}" )
 
     #how to add batch of images to a new collection?
-    collection_identity_img.add_relationship( :is_governed_by, coll )
+    collection_identity_img.add_relationship( :is_governed_by, public_collection )
     collection_identity_img.save
 
-    redirect_to :back, notice: "Public Collection #{coll.title} was successfully created."
+    redirect_to :back, notice: "Public Collection #{public_collection.title} was successfully created."
   end
 
   def make_institutional_collection_public
