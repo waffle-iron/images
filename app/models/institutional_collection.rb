@@ -21,5 +21,13 @@ class InstitutionalCollection < Hydra::AdminPolicy
     solr_doc
   end
 
+  def get_solr_url
+    facet_terms = title.split('|')[1].strip().gsub!(/ /, '+')
+  end
+
+  class InstitutionalCollectionDisplay < ActiveRecord::Base
+    attr_accessible :identity_image_filename
+    attr_accessible :pid
+  end
 
 end

@@ -2,6 +2,7 @@
   <%= form_tag "/dil_collections/create_public_collection", method: "post" do  %>
     <%= text_field_tag :unit_name, nil, placeholder: "Unit Name", required: true %>
     <%= text_field_tag :collection_name, nil, placeholder: "Name of Collection", required: true %>
+    <%= text_field_tag :identity_image_filename, nil, placeholder: "Identity Image Filename" %>
     <%= submit_tag "Create", class: 'btn btn-default' %>
   <% end %>
 </div>

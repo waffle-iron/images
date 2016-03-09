@@ -91,7 +91,33 @@ class CatalogController < ApplicationController
     config.spell_max = 5
   end
 
+  def index
+  (@response, @document_list) = get_search_results
+  @institutional_collections = []
+
+  InstitutionalCollection.all.each do | coll |
+    @collections_nav_and_display = {}
+    ic_display = InstitutionalCollection::InstitutionalCollectionDisplay.find_by_pid(coll.pid)
+    unless ic_display.nil?
+      @collections_nav_and_display['img_src'] = ic_display.identity_image_filename
+      @collections_nav_and_display['solr_url'] = "/catalog?f%5Binstitutional_collection_title_facet%5D%5B%5D=#{coll.title.split('|')[1].strip().gsub!(/ /, '+')}"
+      @collections_nav_and_display['title'] = coll.title
+      @institutional_collections << @collections_nav_and_display
+    end
+  end
 
 
+  respond_to do |format|
+    format.html { preferred_view }
+    format.rss  { render :layout => false }
+    format.atom { render :layout => false }
+    format.json do
+      render json: render_search_results_as_json
+    end
+
+    additional_response_formats(format)
+    document_export_formats(format)
+  end
 end
 
+end

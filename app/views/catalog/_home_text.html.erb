@@ -1,14 +1,17 @@
 <div class="row">
-  <% DIL_CONFIG["institutional_collection"].each do |key, inst_collection| %>
+
+  <% @institutional_collections.each do |inst_collection| %>
     <div class="col-md-4">
-      <a href="<%=inst_collection["solr_url"]%>" class="thumbnail home-header">
-        <%= image_tag( inst_collection["image"]) %>
+      <%=  %>
+      <a href="<%= inst_collection['solr_url'] %>" class="thumbnail home-header">
+        <%= image_tag( inst_collection['img_src']) %>
       </a>
-      <h4><%=inst_collection["title"]%></h4>
+      <h4><%= inst_collection['title'] %></h4>
     </div>
   <% end %>
 </div>
 <div class="row">
+
   <div class="col-md-12">
     <h3>Finding Images</h3>
 

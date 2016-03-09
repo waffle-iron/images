@@ -21,6 +21,11 @@ class DilCollectionsController < ApplicationController
     #"Melville J. Herskovits Library of African Studies"
     #coll.title = "#{params[:title]}|#{params[:facets]}"
     coll.title = "#{params[:unit_name]} | #{params[:collection_name]}"
+    simple_col_obj = InstitutionalCollection::InstitutionalCollectionDisplay.new
+    simple_col_obj.identity_image_filename = "#{params[:identity_image_filename]}"
+    simple_col_obj.pid = new_collection.pid
+
+    simple_col_obj.save
 
     coll.rightsMetadata
     coll.default_permissions
