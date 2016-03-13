@@ -9,6 +9,7 @@
     </div>
   <% end %>
 </div>
+<% unless @institutional_collections.empty? %>
 <div class="row">
   <h3>Public Collections</h3>
   <% @institutional_collections.each do |inst_collection| %>
@@ -20,6 +21,7 @@
     </div>
   <% end %>
 </div>
+<% end %>
   <div class="col-md-12">
     <h3>Finding Images</h3>
 
