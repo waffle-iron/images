@@ -6,6 +6,7 @@ source 'http://rubygems.org'
   gem 'uglifier', '>= 1.0.3'
   gem 'jquery-rails'
   gem 'jbuilder', '~> 2.0'
+  gem 'rb-readline'
 
   gem 'hydra-head', '~> 7.2.2'
 
@@ -26,7 +27,7 @@ source 'http://rubygems.org'
   gem 'capistrano-rails'
   gem 'capistrano-rbenv'
   gem 'capistrano-bundler'
-
+  gem 'capistrano-passenger'
   gem 'therubyracer'
   gem 'jquery-ui-rails'
 
@@ -68,7 +69,6 @@ end
 
 group :production do
   gem 'pg'
-  gem 'rb-readline'
   gem 'google-analytics-rails'
   gem 'lograge'
 end

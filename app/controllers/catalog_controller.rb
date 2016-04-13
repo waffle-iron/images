@@ -119,5 +119,3 @@ class CatalogController < ApplicationController
     document_export_formats(format)
   end
 end
-
-end

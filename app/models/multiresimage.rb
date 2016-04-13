@@ -54,7 +54,7 @@ class Multiresimage < ActiveFedora::Base
       :descriptionSet_display, :subjectSet_display, :culturalContextSet_display,
       :techniqueSet_display, :locationSet_display, :materialSet_display,
       :measurementsSet_display, :stylePeriodSet_display, :inscriptionSet_display,
-      :worktypeSet_display, :sourceSet_display, :relationSet_display, :techniqueSet_display, :editionSet_display, :rightsSet_display]
+      :worktypeSet_display, :sourceSet_display, :relationSet_display, :techniqueSet_display, :editionSet_display, :rightsSet_display, :textrefSet_display]
 
 
   attributes.each do |att|
@@ -83,26 +83,31 @@ class Multiresimage < ActiveFedora::Base
   def create_datastreams_and_persist_image_files(path, batch=false)
     file = path.split("/").last
     file_number = file.split(".tif").first
-    user_error_message = ""
+    create_and_persist_status = true
+
     begin
-      create_archv_techmd_datastream( path )
-      create_archv_exif_datastream( path )
-      create_deliv_techmd_datastream( path )
-      batch ? user_error_message = ImageMover.move_jp2_to_ansel(jp2_img_name, jp2_img_path) : ImageMover.delay.move_jp2_to_ansel(jp2_img_name, jp2_img_path)
-      create_deliv_ops_datastream
-      create_deliv_img_datastream
-      create_archv_img_datastream
-      batch ? user_error_message = ImageMover.move_tiff_to_repo( tiff_img_name, :path) : ImageMover.delay.move_tiff_to_repo( tiff_img_name, :path)
-      edit_groups = [ 'registered' ]
-      save!
+      self.create_archv_techmd_datastream( path )
+      self.create_archv_exif_datastream( path )
+      self.create_deliv_techmd_datastream( path )
+
+      batch ? ImageMover.move_jp2_to_ansel(self.jp2_img_name, self.jp2_img_path) : ImageMover.delay.move_jp2_to_ansel(self.jp2_img_name, self.jp2_img_path)
+      self.create_deliv_ops_datastream
+      self.create_deliv_img_datastream
+      self.create_archv_img_datastream
+
+      batch ? create_and_persist_status = ImageMover.move_tiff_to_repo( self.tiff_img_name, path) : ImageMover.delay.move_tiff_to_repo( self.tiff_img_name, path)
+      self.edit_groups = [ 'registered' ]
+      self.save!
 
       j = Multiresimage.find( pid )
       j.save!
     rescue StandardError => e
+      Delayed::Worker.logger.info("standard error: #{e}")
       file_number.blank? ? "no file number" : file_number
-      user_error_message = "#{file_number} had a problem: #{e}"
+      create_and_persist_status = "#{file_number} had a problem: #{e}"
     end
-    user_error_message
+
+    create_and_persist_status
   end
 
   def create_vra_work(vra, current_user=nil)
@@ -124,10 +129,11 @@ class Multiresimage < ActiveFedora::Base
     work.update_relation_set(self.pid)
 
     # re-validate the newly updated vra
+    #MultiresimageHelper.validate_vra( work.datastreams["VRA"].content )
     self.validate_vra( work.datastreams["VRA"].content )
 
     work.save!
-
+    #Delayed::Worker.logger.info("work.save? #{work.inspect}")
     work #you'd better
   end
 
@@ -148,6 +154,7 @@ class Multiresimage < ActiveFedora::Base
     #We only want this code to execute if we are getting a record from menu (as opposed to the synchronizer)
     if from_menu
       vra = Nokogiri::XML(vra_xml)
+    #  Delayed::Worker.logger.info("vra_save #{vra.xpath("/vra:vra/vra:image").present?}")
       if vra.xpath("/vra:vra/vra:image").present?
 
         #set the refid attribute to the new pid
@@ -179,6 +186,7 @@ class Multiresimage < ActiveFedora::Base
         vra.xpath('/vra:vra/vra:image/vra:relationSet/vra:relation')[ 0 ][ 'relids' ] = work.pid
         vra.xpath('/vra:vra/vra:image/vra:relationSet/vra:relation')[ 0 ][ 'type' ]   = 'imageOf'
 
+
         self.add_relationship(:has_model, "info:fedora/afmodel:Multiresimage")
         self.add_relationship(:has_model, "info:fedora/inu:imageCModel")
 
@@ -201,8 +209,15 @@ class Multiresimage < ActiveFedora::Base
         end
 
         #last thing is to validate the vra to ensure it's valid after all the modifications
-        self.validate_vra( vra.to_xml )
+        #Delayed::Worker.logger.info("vra to xml after all sorts modifications: #{vra.to_xml}")
+
+        result = self.validate_vra( vra.to_xml )
+      #  Delayed::Worker.logger.info("valid vra? #{result}")
+
+
         self.datastreams[ 'VRA' ].content = vra.to_xml
+        #Delayed::Worker.logger.info("datastreams vra content #{self.datastreams[ 'VRA' ].content}")
+        self.datastreams[ 'VRA' ].content
       else
         raise "not an image type"
       end
@@ -275,6 +290,7 @@ class Multiresimage < ActiveFedora::Base
 
 
   def create_jp2_staging( img_location )
+    Delayed::Worker.logger.info("jp2 staging")
    `LD_LIBRARY_PATH=#{Rails.root}/lib/awaresdk/lib/; export LD_LIBRARY_PATH; lib/awaresdk/bin/j2kdriver -i #{img_location} -t jp2 --tile-size 1024 1024 -R 30 -o #{jp2_img_path}`
   end
 
@@ -304,6 +320,7 @@ EOF
 
 
   def get_image_width_and_height
+    Delayed::Worker.logger.info("going to get image height and width")
     unless Nokogiri::XML( self.datastreams[ 'DELIV-TECHMD' ].content )
       raise "Problem with DELIV-TECHMD datastream (maybe it doesn't exist?)"
     end
@@ -318,11 +335,11 @@ EOF
     require 'jhove_service'
 
     # This parameter is where the output file will go
-    logger.debug( 'IN create_jhove_xml' )
+    Delayed::Worker.logger.info( 'IN create_jhove_xml' )
     j = JhoveService.new( File.dirname( img_location ))
     logger.debug( "j: #{ j }")
     xml_loc = j.run_jhove( img_location )
-    logger.debug( "xml_loc: #{ xml_loc }")
+    Delayed::Worker.logger.info( "xml_loc: #{ xml_loc }")
     jhove_xml = File.open(xml_loc).read
   end
 
@@ -371,6 +388,7 @@ EOF
 
 
   def update_associated_work
+    #Delayed::Worker.logger.info("update associated work #{vraworks.first.present?}")
     #Update the image's work (NOTE: only for 1-1 mapping, no need to update work when it's not 1-1)
     if vraworks.first.present?
       vra_work = vraworks.first
@@ -380,6 +398,7 @@ EOF
       vra_work.subjectSet_display_work = subjectSet_display
       vra_work.relationSet_display_work = relationSet_display
       vra_work.titleSet_display_work = titleSet_display
+      vra_work.textrefSet_display_work = textrefSet_display
       vra_work.save!
     end
   end
