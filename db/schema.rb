@@ -17,8 +17,8 @@ ActiveRecord::Schema.define(version: 20160308181136) do
     t.integer  "user_id",     null: false
     t.string   "document_id"
     t.string   "title"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at",  null: false
+    t.datetime "updated_at",  null: false
     t.string   "user_type"
   end
 
@@ -32,16 +32,16 @@ ActiveRecord::Schema.define(version: 20160308181136) do
     t.datetime "failed_at"
     t.string   "locked_by"
     t.string   "queue"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at",             null: false
+    t.datetime "updated_at",             null: false
   end
 
   add_index "delayed_jobs", ["priority", "run_at"], name: "delayed_jobs_priority"
 
   create_table "groups", force: true do |t|
     t.string   "name"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.string   "code",       null: false
   end
 
@@ -54,15 +54,15 @@ ActiveRecord::Schema.define(version: 20160308181136) do
     t.string   "pid"
     t.string   "action"
     t.string   "user_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "searches", force: true do |t|
     t.text     "query_params"
     t.integer  "user_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at",   null: false
+    t.datetime "updated_at",   null: false
     t.string   "user_type"
   end
 
@@ -83,8 +83,8 @@ ActiveRecord::Schema.define(version: 20160308181136) do
     t.datetime "last_sign_in_at"
     t.string   "current_sign_in_ip"
     t.string   "last_sign_in_ip"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at",                          null: false
+    t.datetime "updated_at",                          null: false
     t.string   "uid",                                 null: false
     t.text     "affiliations"
   end
