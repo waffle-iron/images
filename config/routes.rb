@@ -25,6 +25,10 @@ end
   get "/dil_collections/new_public_collection", to: "dil_collections#new_public_collection"
   post "/dil_collections/create_public_collection", to: "dil_collections#create_public_collection"
 
+
+  get "/dil_collections/make_collection_public", to: "dil_collections#make_collection_public"
+  post "/dil_collections/convert_to_public_collection", to: "dil_collections#convert_to_public_collection"
+
   devise_scope :user do
     root "catalog#index"
   end
