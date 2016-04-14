@@ -25,9 +25,16 @@ class DilCollectionsController < ApplicationController
     public_collection_display.pid = new_collection.pid
     public_collection_display.save
 
+    #facets, how do i get them? people could generate facets with the title fields too, need to find out how to do That
+    #-- need to save multiple times, and if it doesn't get the correct rel-ext relationships make sure it'e actually being saved, look at save bangs too
+
+
+    #
     public_collection.title = "#{params[:unit_name]} | #{params[:collection_name]}"
+    #generate rights metadata and default permissions
     public_collection.rightsMetadata
     public_collection.default_permissions
+    #these could be params at some point -- could create a new one and make it private first and then make it public
     public_collection.default_permissions = [{:type=>"group", :access=>"read", :name=>"public"}]
     public_collection.save
 
@@ -42,17 +49,47 @@ class DilCollectionsController < ApplicationController
     redirect_to :back, notice: "Public Collection #{public_collection.title} was successfully created."
   end
 
-  def make_institutional_collection_public
+
+  def make_collection_public
+    #@InstitutionalCollections = DILCollection.all
+  end
+
+
+  def convert_to_public_collection
     #authorize!(:update, DILCollection)
-    img = Multresimage.find(params[:pid])
-    #need to get old collection obj
-    img.remove_relationship( :is_governed_by, old_coll )
+    #so do we want to just call the create controller action with this pid ..
+    #no, but you'd make a model method to do this with and put both controllers' main work into both
+    #in theory maybe all you need to do, in fact
 
-    #new_collection.pid -> either get or create
-    #make sure that all images that use this are correctly reflecting new state of collection
-    coll = InstitutionalCollection.new( pid: new_collection.pid )
+    #new_collection = DILCollection.new(:pid => mint_pid("dil"))
+    old_coll = DILCollection.find(params[:dil_collection_pid])
+    public_collection = InstitutionalCollection.new( pid: old_coll.pid )
 
-    img.add_relationship( :is_governed_by, new_coll )
+    #plain old rails db object, for saving display data (image filename)
+    public_collection_display = InstitutionalCollection::InstitutionalCollectionDisplay.new
+
+    public_collection_display.identity_image_filename = "#{params[:identity_image_filename]}"
+    public_collection_display.pid = old_coll.pid
+    public_collection_display.save
+
+    public_collection.title = old_coll.title #"#{params[:unit_name]} | #{params[:collection_name]}"
+    #generate rights metadata and default permissions
+    public_collection.rightsMetadata
+    public_collection.default_permissions
+    public_collection.default_permissions = [{:type=>"group", :access=>"read", :name=>"public"}]
+    public_collection.save
+
+    #sort this out: can people upload a new image, or do they choose an image from the collection, that then gets saved to the display object?
+    #you'll need to make this images public first
+    collection_identity_img = Multiresimage.find( params[:collection_identity_img_pid] )
+    #collection_identity_img = Multiresimage.find( "#{params[:collection_identity_img_pid]}" )
+
+    #how to add batch of images to a new collection?
+    collection_identity_img.add_relationship( :is_governed_by, public_collection )
+    collection_identity_img.save
+
+
+    redirect_to :back, notice: "Collection #{old_coll.title} was successfully made public."
   end
 
   def create

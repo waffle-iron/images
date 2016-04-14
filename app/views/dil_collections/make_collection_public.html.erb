@@ -1,0 +1,7 @@
+<div class="row">
+  <%= form_tag "/dil_collections/convert_to_public_collection", method: "post" do  %>
+      <%= select_tag(:dil_collection_pid, options_from_collection_for_select(DILCollection.all, :pid, :title)) %>
+      <%= text_field_tag :collection_identity_img_pid, nil, placeholder: "Identity Image Pid" %>
+    <%= submit_tag "Make Public", class: 'btn btn-default' %>
+  <% end %>
+</div>
